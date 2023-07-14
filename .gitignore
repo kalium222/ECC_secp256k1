@@ -1,0 +1,4 @@
+g2
+test.py
+*.o
+__pycache__
