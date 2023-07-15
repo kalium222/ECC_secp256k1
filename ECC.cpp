@@ -474,7 +474,7 @@ string generate(bool use_default) {
     T d;
     Point Q;
     if (use_default) {
-        d = "e91382d06963758afe7c2b4ae1a56ab6a97e6f193a47575eeafc7001ca840cea";
+        d = "dc4f177f659f561f638d88ed9f1f60a7932bdcbb59fed59e460a7949d43547dc";
         Q = powerECC(G, d);
     } else {
         generateKeySet(d, Q);

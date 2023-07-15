@@ -12,7 +12,7 @@ using std::cout, std::endl, std::string;
 using sstream = std::stringstream;
 
 // Store the cihpertext
-static const string CHALLENGE_CIPHERTEXT = "12682273c4fbc5638693fbee125d761fcbd7964e515b1c9f4026bcc2b9d19050,5fe7a882eb646800abb8f8ec4b0775f5947d0b169c42c6ce5a1f94e41fb3b39b,86aee617b8efb5e5b0a3c22375879a407bba375643669539bc47e417933fd6ca";
+static const string CHALLENGE_CIPHERTEXT = "85c5eb66a3e3b6a6e9e5d1e4fb35bca2bd7bf8fa498db98905a55001f8d8820c,7b6309289ccbab2f42d269203d9fe1b2421be97eb187664e1896d04c2f11d138,4d71a157d6794dff76abb753853c3cc72a10ce6e3a167e026e87bebb54c04b96";
 static const string allchars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.;?!()";
 
 enum Operation {

@@ -120,6 +120,7 @@ def do_tests():
     for _ in range(10):
         pt = gen_text(100)
         ct = encrypt(pt, dk)
+        decrypt(ct)
         if decrypt(ct) != decrypt(ct, dk) or decrypt(ct) != pt:
             raise Exception("Default key is not genuine")
     for _ in range(10):
