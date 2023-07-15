@@ -1,0 +1,22 @@
+kind: pipeline
+type: ssh
+name: default
+server:
+  host:
+    from_secret: org_host
+  user: g2
+  ssh_key:
+    from_secret: org_key
+  port: 2475
+steps:
+- name: pre-checks
+  commands:
+  - pwd
+  - whoami
+  - ls
+- name: compile
+  commands:
+  - make
+- name: test
+  commands:
+  - python3 test.py

@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-std=c++17 -Wall -Wextra -pedantic -O3
+CFLAGS=-std=c++17 -Wall -Wextra -pedantic -O3 -static
 LFLAGS=-lgmp
 
 all: g2

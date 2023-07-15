@@ -298,9 +298,6 @@ Point multiply(Point p1, Point p2) {
 Point powerECC(Point point, T n) {
     string n_2 = n.get2String();
     Point res = point;
-    // for (T i = 1; i < n; ++i) {
-    //     res = multiply(res, point);
-    // }
     size_t digit = 0; // start from the most significant bit
     while (n_2[digit] == '0') {
         digit--;
@@ -338,8 +335,9 @@ vector<string> splitByChar(string input, char c) {
 // key = ( T d, T G.x, T G.y ）
 void keyDecoder(string key, T& d, Point& Q) {
     std::vector<std::string> result;
-    result = splitByChar(key, ',');
+    result = splitByChar(key, ';');
     if (result.size() != 3) {
+        cout << result.size() << endl;
         throw std::invalid_argument("Invalid key");
     }
     d = T(result[0].c_str());
@@ -368,7 +366,6 @@ T decrypt(T C1, Point C2, T d) {
 // FIrst to binary code, then to T
 T plaintextDecoder(string plaintext) {
     if (plaintext.size()>(int)BLOCK_SIZE) {
-        cout << "In" << plaintext.size() << endl;
         throw std::invalid_argument("Plaintext is too long");
     }
     T res;
@@ -436,7 +433,6 @@ string encrypt(string message, string key) {
     string ciphertext = "";
     for (string submessage : splitByLength(message, (int)BLOCK_SIZE)) {
         // decode
-        cout << "Out" << submessage.size() << endl;
         T M = plaintextDecoder(submessage);
         // encrypt
         T C1;
@@ -446,7 +442,8 @@ string encrypt(string message, string key) {
         ciphertext += ciphertextEncoder(C1, C2);
         ciphertext += ";";
     }
-
+    // remove the last ';'
+    ciphertext.pop_back();
     return ciphertext;
 }
 
@@ -477,16 +474,16 @@ string generate(bool use_default) {
     T d;
     Point Q;
     if (use_default) {
-        d = 123456789;
+        d = "e91382d06963758afe7c2b4ae1a56ab6a97e6f193a47575eeafc7001ca840cea";
         Q = powerECC(G, d);
     } else {
         generateKeySet(d, Q);
     }
     string key = "";
     key += d.get16String();
-    key += ",";
+    key += ";";
     key += Q.x.get16String();
-    key += ",";
+    key += ";";
     key += Q.y.get16String();
     return key;
 }
@@ -494,8 +491,6 @@ string generate(bool use_default) {
 void test() {
     cout << "Test ECC" << endl;
 
-    cout << string("ssss").size() << endl;
-    
     T c = 1024;
     T d = 2973;
     Point Q = powerECC(G, d);
@@ -528,7 +523,8 @@ void test() {
     cout << "ciphertext: " << ciphertext << endl;
     plain = decrypt(ciphertext, key);
     cout << "plain: " << plain << endl;
-    
+
+    cout << "-----------------------------------------------" << endl;
 
     T r = getRandom();
     cout << "r: " << r.get16String() << endl;
