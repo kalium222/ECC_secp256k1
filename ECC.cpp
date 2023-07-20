@@ -7,201 +7,13 @@
 #include <gmp.h>
 
 #include "ECC.h"
+#include "BigInt.hpp"
 
 using std::string, std::vector, std::cout, std::endl;
 
 // ------------------- Type Definition -------------------
-class BigInt {
-private:
-    mpz_t value;
 
-public:
-    BigInt() {
-        mpz_init2(value, 256);
-    }
-
-    // hex here!
-    BigInt(const char* str) {
-        mpz_init2(value, 256);
-        mpz_set_str(value, str, 16);
-    }
-
-    BigInt(const int i) {
-        mpz_init2(value, 256);
-        mpz_set_si(value, i);
-    }
-
-    BigInt(const mpz_t& other) {
-        mpz_init2(value, 256);
-        mpz_set(value, other);
-    }
-
-    BigInt(const BigInt& other) {
-        mpz_init2(value, 256);
-        mpz_set(value, other.value);
-    }
-
-    ~BigInt() {
-        mpz_clear(value);
-    }
-
-    // ------------------- Operator Overloading -------------------
-    BigInt& operator=(const BigInt& other) {
-        if (this != &other) {
-            mpz_set(value, other.value);
-        }
-        return *this;
-    }
-
-    BigInt& operator=(const int i) {
-        mpz_set_si(value, i);
-        return *this;
-    }
-
-    BigInt operator+(const BigInt& other) const {
-        BigInt result;
-        mpz_add(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator-(const BigInt& other) const {
-        BigInt result;
-        mpz_sub(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator-() const {
-        BigInt result;
-        mpz_neg(result.value, value);
-        return result;
-    }
-
-    BigInt operator*(const BigInt& other) const {
-        BigInt result;
-        mpz_mul(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator*(const int i) const {
-        BigInt result;
-        mpz_mul_si(result.value, value, i);
-        return result;
-    }
-
-    BigInt operator/(const BigInt& other) const {
-        BigInt result;
-        mpz_div(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator%(const BigInt& other) const {
-        BigInt result;
-        mpz_mod(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator^(const BigInt& other) const {
-        BigInt result;
-        mpz_xor(result.value, value, other.value);
-        return result;
-    }
-
-    BigInt operator+=(const BigInt& other) {
-        mpz_add(value, value, other.value);
-        return *this;
-    }
-
-    BigInt operator/= (const BigInt& other) {
-        mpz_div(value, value, other.value);
-        return *this;
-    }
-
-    BigInt operator%= (const BigInt& other) {
-        mpz_mod(value, value, other.value);
-        return *this;
-    }
-
-    BigInt operator++() {
-        mpz_add_ui(value, value, 1);
-        return *this;
-    }
-
-    bool operator==(const BigInt& other) const {
-        return mpz_cmp(value, other.value) == 0;
-    }
-
-    bool operator!=(const BigInt& other) const {
-        return mpz_cmp(value, other.value) != 0;
-    }
-
-    bool operator<(const BigInt& other) const {
-        return mpz_cmp(value, other.value) < 0;
-    }
-
-    bool operator<=(const BigInt& other) const {
-        return mpz_cmp(value, other.value) <= 0;
-    }
-
-    bool operator>(const BigInt& other) const {
-        return mpz_cmp(value, other.value) > 0;
-    }
-
-    bool operator>=(const BigInt& other) const {
-        return mpz_cmp(value, other.value) >= 0;
-    }
-
-
-
-    // ------------------- Member Function -------------------
-    mpz_t& getValue() {
-        return value;
-    }
-
-    void fromMessage(const string& message) {
-        mpz_import(this->value, message.size(), 1, sizeof(char), 0, 0, message.c_str());
-    }
-
-    string toMessage() const {
-        size_t count;
-        char* str = (char*)mpz_export(NULL, &count, 1, sizeof(char), 0, 0, value);
-        string result(str, count);
-        free(str);
-        return result;
-    }
-
-    string get16String() const {
-        char* str256bit = new char[65];
-        mpz_get_str(str256bit, 16, value);
-        string result(str256bit);
-        delete[] str256bit;
-        return result;
-    }
-
-    string get2String() const {
-        char* str256bit = new char[257];
-        mpz_get_str(str256bit, 2, value);
-        string result(str256bit);
-        delete[] str256bit;
-        return result;
-    }
-
-    static BigInt Random() {
-        mpz_t number;
-        mpz_init(number);
-
-        // Set the seed for random number generation
-        gmp_randstate_t state;
-        gmp_randinit_default(state);
-        gmp_randseed_ui(state, time(NULL));  // Set the seed value as desired
-
-        // Generate a random 256-bit number
-        mpz_urandomb(number, state, 256);
-
-        return BigInt(number);
-    }
-};
-
-typedef BigInt T;
+typedef BigInt<256> T;
 typedef struct Point {
     T x, y;
     Point() {}
@@ -216,17 +28,19 @@ typedef vector<Point> Messages;
 // G: compressed form
 static const T a = 0, b = 7;
 static const T field("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F");
-static const Point G(BigInt("79BE667EF9DCBBAC55A06295CE870B07"), BigInt("029BFCDB2DCE28D959F2815B16F81798"));
+static const Point G(T("79BE667EF9DCBBAC55A06295CE870B07"), T("029BFCDB2DCE28D959F2815B16F81798"));
+static const T default_d = "dc4f177f659f561f638d88ed9f1f60a7932bdcbb59fed59e460a7949d43547dc";
 
 // Block size, because secp256k1 is for 256-bit, so BLOCK_SIZE = 256 / 8 = 32
-const size_t BLOCK_SIZE = 32;
+static const size_t BLOCK_SIZE = 30;
+
+// TODO: Kobits 
+static const int K = 40;
 
 // ------------------- Tool function -------------------
 T getRandom() {
     return T::Random() % field;
 }
-
-
 
 // as + bt = gcd(a, b)
 void extendedEuclid(T a, T b, T& s, T& t, T& gcd) {
@@ -346,43 +160,57 @@ void keyDecoder(string key, T& d, Point& Q) {
 }
 
 // generate a random r in [1, p - 1]
-// C2 = G^r, C2 = message xor Q^r.x
+// C2 = G^r, C2 = message*Q^r.x
 // the ciphertext is (C1, C2)
-void encrypt(T message, Point Q, T& C1, Point& C2) {
+void encrypt(const Point& message, const Point& Q, Point& C1, Point& C2) {
     T r = getRandom();
     C2 = powerECC(G, r);
-    C1 = message ^ powerECC(Q, r).x;
+    C1 = multiply(message, powerECC(Q, r));
 }
 
-// M = C1 xor C2^d
-T decrypt(T C1, Point C2, T d) {
-    T res = C1 ^ powerECC(C2, d).x;
+// M = C1/C2^d
+Point decrypt(Point C1, Point C2, T d) {
+    Point res = multiply(C1, inverse(powerECC(C2, d)));
     return res;
 }
 
 
 // ------------------- Coder -------------------
-// meaningful plaintext string to T
-// FIrst to binary code, then to T
-T plaintextDecoder(string plaintext) {
-    if (plaintext.size()>(int)BLOCK_SIZE) {
+// meaningful plaintext string to Point
+// First to binary code, then to Point
+Point plaintextDecoder(string chunck) {
+    if (chunck.size()>(int)BLOCK_SIZE) {
         throw std::invalid_argument("Plaintext is too long");
     }
-    T res;
-    res.fromMessage(plaintext);
+    T x, y;
+    x.fromMessage(chunck);
+    x = x * T(K) + 1;
+    Point res;
+
+    // TODO: Kobits
+    for (int i = 0; i < K; i++) {
+        y = (T(K)*(x * x * x + a * x + b)).getDiscreteSquareRootMod(field);
+        if (y != -1) break;
+        x++;
+    }
+    if (y == -1) {
+        throw std::invalid_argument("Cannot find y");
+    }
+    res.x = x;
+    res.y = y;
     return res;
 }
 
 // Inverse of above
-string plaintextEncoder(T M) {
+string plaintextEncoder(Point M) {
     string res;
-    res = M.toMessage();
+    res = (M.x/T(K)).toMessage();
     return res;
 }
 
 
-// binary code string to to T C1, T C2.x, T C2.y
-void ciphertextDecoder(string ciphertext, T& C1, Point& C2) {
+// binary code string to to Point C1, Point C2
+void ciphertextDecoder(const string ciphertext, Point& C1, Point& C2) {
     std::stringstream ss(ciphertext);
     std::vector<std::string> result;
     while (ss.good()) {
@@ -390,18 +218,21 @@ void ciphertextDecoder(string ciphertext, T& C1, Point& C2) {
         getline(ss, substr, ',');
         result.push_back(substr);
     }
-    if (result.size() != 3) {
+    if (result.size() != 4) {
         throw std::invalid_argument("Ciphertext is not valid");
     }
-    C1 = T(result[0].c_str());
-    C2.x = T(result[1].c_str());
-    C2.y = T(result[2].c_str());
+    C1.x = T(result[0].c_str());
+    C1.y = T(result[1].c_str());
+    C2.x = T(result[2].c_str());
+    C2.y = T(result[3].c_str());
 }
 
 // T C1, Point C2 to binary code string
-string ciphertextEncoder(T C1, Point C2) {
+string ciphertextEncoder(const Point C1, const Point C2) {
     string res = "";
-    res += C1.get16String();
+    res += C1.x.get16String();
+    res += ",";
+    res += C1.y.get16String();
     res += ",";
     res += C2.x.get16String();
     res += ",";
@@ -428,15 +259,13 @@ string encrypt(string message, string key) {
     T d;
     Point Q;
     keyDecoder(key, d, Q);
-    Q = powerECC(G, d);
 
     string ciphertext = "";
     for (string submessage : splitByLength(message, (int)BLOCK_SIZE)) {
         // decode
-        T M = plaintextDecoder(submessage);
+        Point M = plaintextDecoder(submessage);
         // encrypt
-        T C1;
-        Point C2;
+        Point C1, C2;
         encrypt(M, Q, C1, C2);
         // encode
         ciphertext += ciphertextEncoder(C1, C2);
@@ -459,11 +288,10 @@ string decrypt(string message, string key) {
             continue;
         }
         // decode
-        T C1;
-        Point C2;
+        Point C1, C2;
         ciphertextDecoder(block, C1, C2);
         // decrypt
-        T M = decrypt(C1, C2, d);
+        Point M = decrypt(C1, C2, d);
         // encode
         plaintext += plaintextEncoder(M);
     }
@@ -474,7 +302,7 @@ string generate(bool use_default) {
     T d;
     Point Q;
     if (use_default) {
-        d = "dc4f177f659f561f638d88ed9f1f60a7932bdcbb59fed59e460a7949d43547dc";
+        d = default_d;
         Q = powerECC(G, d);
     } else {
         generateKeySet(d, Q);
@@ -494,7 +322,9 @@ void test() {
     T c = 1024;
     T d = 2973;
     Point Q = powerECC(G, d);
-    string plain = "Hellooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+    string plain = "0ooooooooooooooooooooooooooooo12";
+    d.fromMessage(plain);
+    // cout << d.toMessage() << endl;
     // T M = plaintextDecoder(plain);
     // cout << "M: " << M.get16String() << endl;
     // T C1;
@@ -516,18 +346,27 @@ void test() {
     // string plain2 = plaintextEncoder(M2);
     // cout << "plain2: " << plain2 << endl;
 
-    cout << "-----------------------------------------------" << endl;
-    string key = generate();
+    cout << "------------------Whole Process Test--------------------" << endl;
+    string key = generate(true);
     cout << "key: " << key << endl;
     string ciphertext = encrypt(plain, key);
     cout << "ciphertext: " << ciphertext << endl;
     plain = decrypt(ciphertext, key);
     cout << "plain: " << plain << endl;
 
-    cout << "-----------------------------------------------" << endl;
+    cout << "--------------------------------------------------------" << endl;
 
-    T r = getRandom();
-    cout << "r: " << r.get16String() << endl;
-    
-    cout << "Test ECC done" << endl;
+    // T n = 10;
+    // cout << "Legendre: " << n.getLegendraSymbol(13) << endl;
+    // T a = 2;
+    // T w_square = (a*a - n)%13;
+    // cout << "w_square: " << w_square.get16String() << endl;
+    // cout << "Square Root" << n.getDiscreteSquareRootMod(13).get16String() << endl;
+    // cout << "Test ECC done" << endl;
+
+    // T r1, r2;
+    // r1 = getRandom();
+    // r2 = getRandom();
+
+    // cout << (r1.getLegendraSymbol(r2)==mpz_legendre(r1.getValue(), r2.getValue())) << endl;
 }

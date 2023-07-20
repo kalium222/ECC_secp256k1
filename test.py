@@ -108,6 +108,7 @@ def do_tests():
 
     print("Checking decryption consistency... ", end='')
     for _ in range(5):
+        print("Round ", _)
         pt = gen_text(100)
         key = generate()
         ct = encrypt(pt, key)
@@ -118,12 +119,14 @@ def do_tests():
 
     print("Verifying default key... ", end='')
     for _ in range(10):
+        print("Round ", _)
         pt = gen_text(100)
         ct = encrypt(pt, dk)
         decrypt(ct)
         if decrypt(ct) != decrypt(ct, dk) or decrypt(ct) != pt:
             raise Exception("Default key is not genuine")
     for _ in range(10):
+        print("Round ", _)
         pt = gen_text(100)
         ct = encrypt(pt)
         if decrypt(ct) != decrypt(ct, dk) or decrypt(ct, dk) != pt:
@@ -132,6 +135,7 @@ def do_tests():
 
     print("Checking challenge ciphertext correctness... ", end='')
     for _ in range(10):
+        print("Round ", _)
         if decrypt(cct, dk) != cpt:
             raise Exception("Challenge ciphertext is incorrect")
     print("Success!")
@@ -143,6 +147,7 @@ def do_tests():
 
     print("Testing encryption/decryption with default key... ", end='')
     for i in range(10):
+        print("Round ", i)
         message = gen_text(random.randint(100*i, 100*(i+1)))
         if decrypt(encrypt(message)) != message:
             raise Exception("Encryption/decryption does not work correctly")
@@ -151,6 +156,7 @@ def do_tests():
     keys = set()
     print("Testing encryption/decryption with generated key... ", end='')
     for i in range(20):
+        print("Round ", i)
         key = generate()
         keys.add(key)
         message = gen_text(random.randint(10*i, 10*(i+1)))

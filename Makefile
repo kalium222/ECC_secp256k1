@@ -1,19 +1,16 @@
-CC=g++
+CC = g++
 CFLAGS=-std=c++17 -Wall -Wextra -pedantic -O3 -static
-LFLAGS=-lgmp
+LFLAGS = -lgmp
 
-all: g2
+TARGET = g2
+SRCS = main.cpp ECC.cpp
+OBJS = $(SRCS:.cpp=.o)
 
-g2: main.o ECC.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LFLAGS)
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LFLAGS)
 
-main.o: main.cpp ECC.h
+%.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
-
-ECC.o: ECC.cpp ECC.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-.PHONY: clean
 
 clean:
-	rm -f *.o program
+	rm -f $(OBJS) $(TARGET)
