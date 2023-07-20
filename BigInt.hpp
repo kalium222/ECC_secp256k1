@@ -187,9 +187,10 @@ public:
 
 
 
+
     // ------------------- Member Function -------------------
     // mpz_t& getValue() const {
-    //     return value;
+    //     return this->value;
     // }
 
     void fromMessage(const string& message) {
@@ -247,8 +248,7 @@ public:
         // Check if n is a quadratic residue mod p
         // by legendra symbol
         if (this->getLegendraSymbol(p) != 1) {
-            // Very unlikely to happen
-            throw std::runtime_error("n is not a quadratic residue mod p");
+            // 1/2 chance to be not a quadratic residue
             return BigInt(-1);
         }
         // Randomly find a that a^2 - n is not a quadratic residue mod p
